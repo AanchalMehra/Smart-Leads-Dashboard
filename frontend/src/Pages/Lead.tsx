@@ -3,8 +3,9 @@ import api from "../api/axios"
 
 import LeadsTable from "../Components/Leads/LeadsTable"
 import Pagination from "../Components/Pagination"
-import LeadModal from "../Components/Leads/LeadModel"
+import LeadModal from "../Components/Leads/LeadModal"
 import Loading from "../Components/Loading"
+import ExportCSV from "../Components/ExportCsv"
 
 import type { Lead, LeadStatus, LeadSource, LeadsResponse } from "../types/lead.types"
 
@@ -24,7 +25,6 @@ function LeadsPage(){
 
   const [selectedLead,setSelectedLead ]=useState<Lead | null>(null)
   const [isModalOpen, setIsModalOpen ] = useState<boolean>(false)
-  // Track whether the modal starts locked down or editable on mount
   const [startReadOnly, setStartReadOnly]= useState<boolean>(false)
 
   const fetchLeads= useCallback(async()=>{
@@ -77,9 +77,9 @@ function LeadsPage(){
   }
 
   return(
-    <div className="p-6 bg-canvas min-h-screen text-text-main transition-colors duration-200 flex flex-col gap-4">
+    <div className="p-6 bg-canvas h-[calc(100vh-4rem)] text-text-main transition-colors duration-200 flex flex-col gap-4 overflow-hidden">
       
-      {/* FIXED HEADER CONTROLS */}
+      {/* HEADER CONTROLS ACTIONS CLUSTER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div className="flex flex-wrap items-center gap-3 flex-1">
           <input
@@ -122,20 +122,27 @@ function LeadsPage(){
           </select>
         </div>
 
-        <button
-          className="bg-blue-600 text-white font-medium px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors cursor-pointer whitespace-nowrap self-end sm:self-auto"
-          onClick={()=>{
-            setSelectedLead(null)
-            setStartReadOnly(false) // Creating a new lead must be editable right away
-            setIsModalOpen(true)
-          }}
-        >
-          Add Lead
-        </button>
+        {/* COMBINED ACTION CONTROL BUTTONS CONTAINER */}
+        <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
+          
+          {/* Beautiful and simple call to the separate CSV exporter */}
+          <ExportCSV disabled={loading} />
+
+          <button
+            className="bg-blue-600 text-white font-medium px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors cursor-pointer whitespace-nowrap"
+            onClick={()=>{
+              setSelectedLead(null)
+              setStartReadOnly(false)
+              setIsModalOpen(true)
+            }}
+          >
+            Add Lead
+          </button>
+        </div>
       </div>
 
-      {/* STABLE WRAPPER CONTAINER */}
-      <div className="w-full">
+      {/* MIDDLE CONTAINER PANEL */}
+      <div className="flex-1 min-h-0 w-full overflow-hidden">
         { loading ? (
           <Loading />
         ) : error ? (
@@ -151,7 +158,7 @@ function LeadsPage(){
             leads={leads}
             onView={(lead, forceEdit)=>{
               setSelectedLead(lead)
-              setStartReadOnly(!forceEdit) // View mode opens read-only, quick-links open editable
+              setStartReadOnly(!forceEdit)
               setIsModalOpen(true)
             }}
             onDelete={handleDelete}
@@ -159,9 +166,9 @@ function LeadsPage(){
         )}
       </div>
 
-      {/* PAGINATION PANEL - SECURED UNDER THE DATA WINDOW BOX */}
+      {/* PAGINATION PANEL CONTROLS */}
       { !error && leads.length > 0 && (
-        <div className="pt-2">
+        <div className="shrink-0 pt-2 border-t border-border-muted bg-canvas">
           <Pagination
             page={page}
             totalPages={totalPages}

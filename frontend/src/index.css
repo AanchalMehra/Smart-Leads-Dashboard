@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: var(--app-canvas);
+  --color-surface: var(--app-surface);
+  --color-border-muted: var(--app-border-muted);
+  --color-border-strong: var(--app-border-strong);
+  --color-text-main: var(--app-text-main);
+  --color-text-muted: var(--app-text-muted);
+  --color-input-bg: var(--app-input-bg);
+}
+
+:root {
+  --app-canvas: #f8fafc;
+  --app-surface: #ffffff;
+  --app-border-muted: #e2e8f0;
+  --app-border-strong: #cbd5e1;
+  --app-text-main: #0f172a;
+  --app-text-muted: #64748b;
+  --app-input-bg: #f1f5f9;
+}
+
+.dark {
+  --app-canvas: #0b1329;
+  --app-surface: #1c2541;
+  --app-border-muted: #3a506b;
+  --app-border-strong: #5bc0be;
+  --app-text-main: #f8fafc;
+  --app-text-muted: #94a3b8;
+  --app-input-bg: #0b1329;
+}

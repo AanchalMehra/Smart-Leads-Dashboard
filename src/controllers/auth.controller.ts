@@ -2,6 +2,8 @@ import {Request,Response} from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/User";
 import jwt from "jsonwebtoken";
+import { AuthRequest } from "../middleware/auth.middleware";
+
 interface SignupBody {
   name: string;
   email: string;
@@ -102,3 +104,23 @@ export interface LoginBody {
         return;
     }
  }
+
+ export const getSession=async(req:AuthRequest,res:Response):
+  Promise<void>=>{
+  try {
+    if (!req.user) {
+      res.status(401).json({message: "Unauthorized"});
+      return;
+    }
+    res.status(200).json({
+      user: req.user,
+    });
+  } 
+  catch (error: unknown) {
+    res.status(500).json({message: "Server Error",
+       error:error instanceof Error
+          ? error.message
+          : "Error occurred",
+    });
+  }
+};

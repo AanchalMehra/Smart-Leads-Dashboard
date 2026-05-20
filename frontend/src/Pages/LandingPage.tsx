@@ -3,13 +3,13 @@ import { useAuth } from "../context/AuthContext"
 import Loading from "../Components/Loading"
 
 function LandingPage() {
-  const { user, loading } = useAuth()
-  const navigate = useNavigate()
+  const {user,loading }= useAuth()
+  const navigate=useNavigate()
 
-  if (loading) return <Loading fullScreen />
+  if (loading)return<Loading fullScreen />
 
   if (user) {
-    navigate( "/dashboard", { replace: true })
+    navigate( "/dashboard", {replace: true })
     return null
   }
 

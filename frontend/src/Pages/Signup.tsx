@@ -8,9 +8,9 @@ import type { SignupFormData } from "../types/auth.types";
 
 //api type
 type SignupResponse = {
-  success: boolean;
-  message?: string;
-  token?: string;
+  success:boolean;
+  message?:string;
+  token?:string;
 };
 
 function SignupPage() {
@@ -20,12 +20,12 @@ function SignupPage() {
     password: "",
   });
 
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  const [loading,setLoading]= useState<boolean>(false);
+  const [error,setError]= useState<string>("");
 
-  const navigate = useNavigate();
+  const navigate=useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange=(e:React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
@@ -33,26 +33,27 @@ function SignupPage() {
     }));
   };
 
-  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit= async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      // Type-safe Axios POST request passing 'SignupFormData' structure and matching 'SignupResponse'
       await api.post<SignupResponse>("/auth/signup", form);
       navigate("/login/sales");
     } catch (err: unknown) {
-      let message = "Signup failed";
+      let message="Signup failed";
 
-      if (err instanceof AxiosError) {
-        message = err.response?.data?.message || err.message || "Signup failed";
-      } else if (err instanceof Error) {
-        message = err.message;
+      if(err instanceof AxiosError) {
+        message=err.response?.data?.message || err.message || "Signup failed";
+      } 
+      else if(err instanceof Error) {
+        message=err.message;
       }
 
       setError(message);
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   };

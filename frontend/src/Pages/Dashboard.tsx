@@ -8,11 +8,11 @@ import type { DashboardData } from "../types/dashboard.types"
 import { useAuth } from "../context/AuthContext"
 
 function Dashboard(): JSX.Element {
-  const [data, setData]= useState<DashboardData | null>(null)
-  const [loading, setLoading]= useState<boolean>(true)
+  const [data,setData]= useState<DashboardData | null>(null)
+  const [loading,setLoading]= useState<boolean>(true)
   const [error, setError]= useState<string>("")
 
-  const { user }= useAuth()
+  const { user}= useAuth()
 
   useEffect(() => {
     const fetchDashboard = async (): Promise<void> => {
@@ -59,9 +59,10 @@ function Dashboard(): JSX.Element {
     )
   }
 
-  const firstName = user?.name ? user.name.split(" ")[0] : ""
-  const title: string = firstName ? `Welcome back, ${firstName}!` : `Welcome back, ${data.role}!`
-  const subtitle: string = data.role === "admin"
+  const firstName= user?.name?user.name.split(" ")[0] : ""
+
+  const title:string= firstName?`Welcome back, ${firstName}!` : `Welcome back, ${data.role}!`
+  const subtitle:string= data.role==="admin"
     ? "Overview of administrative metrics"
     : "Your sales metrics and performance"
   
@@ -74,11 +75,11 @@ function Dashboard(): JSX.Element {
 
       <DashboardCards
         stats={{
-          totalLeads: data?.stats?.totalLeads ?? 0,
-          newLeads: data?.stats?.newLeads ?? 0,
-          contactedLeads: data?.stats?.contactedLeads ?? 0,
-          qualifiedLeads: data?.stats?.qualifiedLeads ?? 0,
-          lostLeads: data?.stats?.lostLeads ?? 0,
+          totalLeads:data?.stats?.totalLeads?? 0,
+          newLeads: data?.stats?.newLeads?? 0,
+          contactedLeads: data?.stats?.contactedLeads?? 0,
+          qualifiedLeads: data?.stats?.qualifiedLeads?? 0,
+          lostLeads: data?.stats?.lostLeads??0,
         }}
       />
     </div>

@@ -14,16 +14,16 @@ function ExportCSV({ disabled }: Props) {
       setExporting(true)
       
       // Grab all leads at once bypassing current page limits
-      const res = await api.get("/leads", { params: { limit: 1000 } })
-      const rawLeads = res.data?.data || []
+      const res= await api.get("/leads", { params: { limit: 1000 } })
+      const rawLeads=res.data?.data || []
 
-      if (rawLeads.length === 0) {
+      if (rawLeads.length===0) {
         toast.error("No lead records available to export.")
         return
       }
 
-      const headers = ["ID", "Name", "Email", "Phone", "Status", "Source", "Notes"]
-      const csvRows = [
+      const headers=["ID", "Name", "Email", "Phone", "Status", "Source", "Notes"]
+      const csvRows=[
         headers.join(","),
         ...rawLeads.map((lead: any) => [
           `"${lead._id || ''}"`,
@@ -36,20 +36,22 @@ function ExportCSV({ disabled }: Props) {
         ].join(","))
       ]
 
-      const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
+      const blob= new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" })
+      const url= URL.createObjectURL(blob)
+      const link= document.createElement("a")
+      link.href= url
       link.setAttribute("download", `SmartLeads_Export_${new Date().toISOString().split('T')[0]}.csv`)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       
       toast.success("CSV file downloaded successfully!")
-    } catch (err) {
+    } 
+    catch(err) {
       console.error("CSV Export failure:", err)
       toast.error("Failed to compile CSV document.")
-    } finally {
+    } 
+    finally {
       setExporting(false)
     }
   }

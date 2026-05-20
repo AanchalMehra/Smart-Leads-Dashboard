@@ -1,89 +1,89 @@
-import { useEffect, useState } from "react"
-import api from "../../api/axios"
-import type { Lead, LeadStatus, LeadSource } from "../../types/lead.types"
-
-import LeadFormFields from "./LeadFormFields"
-import LeadModalHeader from "./LeadModalHeader"
-import DeleteConfirm from "./DeleteConfirm"
+import { useEffect, useState } from "react";
+import api from "../../api/axios";
+import type { Lead, LeadStatus, LeadSource } from "../../types/lead.types";
+import LeadFormFields, { type FormErrors } from "./LeadFormFields";
+import LeadModalHeader from "./LeadModalHeader";
 
 interface Props {
   lead: Lead | null;
   initialReadOnly: boolean;
+  userRole: string;
   onClose: () => void;
   refresh: () => void;
+  onDeleteTrigger: () => void;
 }
 
-function LeadModal({ lead, initialReadOnly, onClose, refresh }: Props){
+function LeadModal({ lead, initialReadOnly, userRole, onClose, refresh, onDeleteTrigger }: Props) {
   const isEditMode = Boolean(lead);
-  const [isReadOnly, setIsReadOnly] = useState<boolean>(initialReadOnly)
+  const isAdmin = userRole === "admin";
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(initialReadOnly);
 
-  const [name, setName] = useState<string>("")
-  const [email, setEmail] = useState<string>("")
-  const [phone, setPhone] = useState<string>("")
-  const [status, setStatus] = useState<LeadStatus>("New")
-  const [source, setSource] = useState<LeadSource>("Website")
-  const [notes, setNotes] = useState<string>("")
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [status, setStatus] = useState<LeadStatus>("New");
+  const [source, setSource] = useState<LeadSource>("Website");
+  const [notes, setNotes] = useState<string>("");
   
-  const [loading, setLoading] = useState<boolean>(false)
-  const [deleteLoading, setDeleteLoading] = useState<boolean>(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     if (lead) {
       setName(lead.name); setEmail(lead.email); setPhone(lead.phone || "");
       setStatus(lead.status); setSource(lead.source); setNotes(lead.notes || "");
-      setIsReadOnly(initialReadOnly)
+      setIsReadOnly(initialReadOnly);
     } else {
       setName(""); setEmail(""); setPhone(""); setStatus("New"); setSource("Website"); setNotes("");
-      setIsReadOnly(false)
+      setIsReadOnly(false);
     }
-    setSubmitError(null)
-    setShowDeleteConfirm(false) // Safe to reset now because it won't fire on internal state changes
-  }, [lead?._id, initialReadOnly]); 
+    setSubmitError(null);
+    setErrors({});
+  }, [lead, initialReadOnly]); 
 
- const handleSubmit = async () => {
-  try {
-    setLoading(true)
-    setSubmitError(null)
-    const payload = { name, email, phone, status, source, notes };
-    
-    if (isEditMode && lead) {
-      await api.patch(`/leads/${lead._id}`, payload);
-    } else {
-      await api.post("/leads", payload);
+  const handleSubmit = async () => {
+    const validationErrors: FormErrors = {};
+
+    // Basic required check
+    if (!name.trim()) {
+      validationErrors.name = "Full name is required.";
     }
 
-    refresh(); 
-    setIsReadOnly(true); 
-    onClose(); 
-  } catch (err: any) {
-    console.error("Failed to save lead:", err);
-    
-    // 🚀 Dynamic extraction: This reads the actual message your backend sent!
-    const backendMessage = err.response?.data?.message || err.message || "Unknown server issue";
-    setSubmitError(`Server Error: ${backendMessage}`);
-  } finally {
-    setLoading(false)
-  }
-};
+    // Basic easy email check: looks for '@' and '.' characters
+    if (!email.trim()) {
+      validationErrors.email = "Email address is required.";
+    } else if (!email.includes("@") || !email.includes(".")) {
+      validationErrors.email = "Please enter a valid email address.";
+    }
 
-  const handleDelete = async () => {
-    if (!lead) return
+    // Stop if there are errors
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     try {
-      setDeleteLoading(true)
-      setSubmitError(null)
-      await api.delete(`/leads/${lead._id}`)
-      refresh()
-      onClose()
+      setLoading(true);
+      setSubmitError(null);
+      const payload = { name, email, phone, status, source, notes };
+      
+      if (isEditMode && lead) {
+        await api.patch(`/leads/${lead._id}`, payload);
+      } else {
+        await api.post("/leads", payload);
+      }
+
+      refresh(); 
+      setIsReadOnly(true); 
+      onClose(); 
     } catch (err) {
-      console.error("Delete failed", err)
-      setSubmitError("Failed to delete the lead. Please try again.")
-      setShowDeleteConfirm(false)
+      console.error("Failed to save lead:", err);
+      setSubmitError("Failed to save lead details. Please try again.");
     } finally {
-      setDeleteLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-6">
@@ -94,8 +94,9 @@ function LeadModal({ lead, initialReadOnly, onClose, refresh }: Props){
         <LeadModalHeader 
           isReadOnly={isReadOnly}
           isEditMode={isEditMode}
+          isAdmin={isAdmin}
           onEditTrigger={() => setIsReadOnly(false)}
-          onDeleteTrigger={() => setShowDeleteConfirm(true)}
+          onDeleteTrigger={onDeleteTrigger}
           onClose={onClose}
         />
 
@@ -110,6 +111,7 @@ function LeadModal({ lead, initialReadOnly, onClose, refresh }: Props){
             isReadOnly={isReadOnly} name={name} setName={setName} email={email} setEmail={setEmail}
             phone={phone} setPhone={setPhone} status={status} setStatus={setStatus}
             source={source} setSource={setSource} notes={notes} setNotes={setNotes}
+            errors={errors} setErrors={setErrors}
           />
         </div>
 
@@ -123,20 +125,9 @@ function LeadModal({ lead, initialReadOnly, onClose, refresh }: Props){
             </button>
           )}
         </div>
-
-        {/* Custom Confirmation Popup Container */}
-        {showDeleteConfirm && (
-          <DeleteConfirm 
-            name={name}
-            deleteLoading={deleteLoading}
-            onCancel={() => setShowDeleteConfirm(false)}
-            onConfirm={handleDelete}
-          />
-        )}
-
       </div>
     </div>
-  )
+  );
 }
 
-export default LeadModal
+export default LeadModal;

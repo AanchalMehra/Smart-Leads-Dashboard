@@ -1,104 +1,119 @@
-import { useCallback, useEffect, useState } from "react"
-import api from "../api/axios"
+import { useCallback, useEffect, useState } from "react";
+import api from "../api/axios";
 
-import LeadsTable from "../Components/Leads/LeadsTable"
-import Pagination from "../Components/Pagination"
-import LeadModal from "../Components/Leads/LeadModal"
-import Loading from "../Components/Loading"
-import ExportCSV from "../Components/ExportCsv"
-import { Filter, ChevronDown, ChevronUp } from "lucide-react" // Added layout icons
+import LeadsTable from "../Components/Leads/LeadsTable";
+import Pagination from "../Components/Pagination";
+import LeadModal from "../Components/Leads/LeadModal";
+import DeleteConfirm from "../Components/Leads/DeleteConfirm";
+import Loading from "../Components/Loading";
+import ExportCSV from "../Components/ExportCsv";
+import { Filter, ChevronDown, ChevronUp } from "lucide-react";
 
-import type { Lead, LeadStatus, LeadSource, LeadsResponse } from "../types/lead.types"
+import type { Lead, LeadStatus, LeadSource, LeadsResponse } from "../types/lead.types";
+import { useAuth } from "../context/AuthContext"; 
 
 function LeadsPage(){
-  const [leads,setLeads ]= useState<Lead[]>([])
-  const [loading,setLoading]=useState<boolean>(true)
-  const [error , setError]= useState<string | null>(null)
+  // Extract real user details from context
+  const { user } = useAuth();
+  const userRole = user?.role || "sales";
 
-  const [search, setSearch]= useState<string>("")
-  const [status,setStatus ]= useState<LeadStatus | "">("")
-  const [source,setSource]=useState<LeadSource | "">("")
-  const [sort, setSort ] =useState<"latest" | "oldest">("latest")
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [error , setError] = useState<string | null>(null);
 
-  const [page,setPage] =useState<number>(1)
-  const [limit]= useState<number>(10)
-  const [totalPages,setTotalPages]=useState<number>(1)
+  const [search, setSearch] = useState<string>("");
+  const [status, setStatus] = useState<LeadStatus | "">("");
+  const [source, setSource] = useState<LeadSource | "">("");
+  const [sort, setSort] = useState<"latest" | "oldest">("latest");
 
-  const [selectedLead,setSelectedLead ]=useState<Lead | null>(null)
-  const [isModalOpen, setIsModalOpen ] = useState<boolean>(false)
-  const [startReadOnly, setStartReadOnly]= useState<boolean>(false)
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(10);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
-  //  Mobile Filter Menu
-  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState<boolean>(false)
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [startReadOnly, setStartReadOnly] = useState<boolean>(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
 
-  // Calculate active filter count (
-  const activeFilterCount = [status, source].filter(Boolean).length
+  // Mobile Filter Menu
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState<boolean>(false);
 
-  const fetchLeads= useCallback(async()=>{
-    try{
-      setLoading(true)
-      setError( null)
+  const activeFilterCount = [status, source].filter(Boolean).length;
 
-      const res= await api.get<LeadsResponse>("/leads",{
-        params:{
-          page,
-          limit,
-          search,
-          status,
-          source,
-          sort,
-        },
-      })
+  const fetchLeads = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-      setLeads(res.data.data)
-      setTotalPages(res.data.pagination.pages)
-    }catch(err ){
-      console.error("Failed to fetch leads")
-      setError("Failed to fetch leads. Please try again later.")
-    }finally{
-      setLoading(false)
+      const res = await api.get<LeadsResponse>("/leads", {
+        params: { page, limit, search, status, source, sort },
+      });
+
+      setLeads(res.data.data);
+      setTotalPages(res.data.pagination.pages);
+    } catch (err) {
+      console.error("Failed to fetch leads:", err);
+      setError("Failed to fetch leads. Please try again later.");
+    } finally {
+      setLoading(false);
     }
-  },[page,limit,search,status,source,sort])
+  }, [page, limit, search, status, source, sort]);
 
   useEffect(() => {
-    const timer= setTimeout(()=>{
-      fetchLeads()
-    },400)
+    const timer = setTimeout(() => {
+      fetchLeads();
+    }, 400);
 
-    return()=> clearTimeout(timer)
-  },[fetchLeads])
+    return () => clearTimeout(timer);
+  }, [fetchLeads]);
 
   useEffect(() => {
-    setPage(1)
-  },[search,status,source])
+    setPage(1);
+  }, [search, status, source]);
 
-  const handleDelete= async(lead:Lead )=>{
-    if(!confirm("Are you sure you want to delete this lead?" )) return
+  // Handle opening the detached delete confirmation popup
+  const openDeletePopup = (lead: Lead) => {
+    setSelectedLead(lead);
+    setShowDeleteConfirm(true);
+  };
 
-    try{
-      await api.delete(`/leads/${lead._id}` )
-      fetchLeads()
-    }catch(err){
-      console.error("Delete failed" )
+  // Safe database delete routine
+  const handleConfirmedDelete = async () => {
+    if (!selectedLead) return;
+
+    try {
+      setDeleteLoading(true);
+      await api.delete(`/leads/${selectedLead._id}`);
+      
+      setShowDeleteConfirm(false);
+      setIsModalOpen(false); // Closes the underlying detail sheet at the same time
+      setSelectedLead(null);
+      
+      fetchLeads();
+    } catch (err) {
+      console.error("Delete call failed:", err);
+    } finally {
+      setDeleteLoading(false);
     }
-  }
+  };
 
-  return(
+  return (
     <div className="p-4 sm:p-6 bg-canvas h-[calc(100vh-4rem)] text-text-main transition-colors duration-200 flex flex-col gap-4 overflow-hidden">
       
       {/* HEADER CONTROL ACTIONS BAR */}
       <div className="flex flex-col gap-3 shrink-0 sm:flex-row sm:items-center sm:justify-between">
         
-        {/* Search Field  */}
+        {/* Search Field */}
         <div className="flex items-center gap-2 flex-1 w-full sm:max-w-xs">
           <input
             className="border border-border-strong rounded-xl bg-surface px-3 py-2 text-sm text-text-main placeholder-text-muted focus:outline-none w-full"
             placeholder="Search leads..."
             value={search}
-            onChange={(e )=> setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
           
-          {/* 📱 MOBILE ONLY: Toggle Filter Menu Button */}
+          {/* MOBILE ONLY Filters Toggle */}
           <button
             onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
             className={`sm:hidden flex items-center gap-1.5 border px-3 py-2 rounded-xl text-sm font-medium transition cursor-pointer ${
@@ -118,16 +133,16 @@ function LeadsPage(){
           </button>
         </div>
 
-        {/* TOP BUTTON ACTIONS ROW (CSV + ADD LEAD) */}
+        {/* TOP BUTTON ACTIONS ROW */}
         <div className="flex items-center gap-2 shrink-0 justify-end sm:w-auto">
           <ExportCSV disabled={loading} />
 
           <button
             className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl text-sm hover:bg-blue-700 transition active:scale-[0.98] cursor-pointer whitespace-nowrap flex-1 sm:flex-none justify-center text-center"
-            onClick={()=>{
-              setSelectedLead(null)
-              setStartReadOnly(false)
-              setIsModalOpen(true)
+            onClick={() => {
+              setSelectedLead(null);
+              setStartReadOnly(false);
+              setIsModalOpen(true);
             }}
           >
             Add Lead
@@ -135,7 +150,7 @@ function LeadsPage(){
         </div>
       </div>
 
-      {/* 📊 FILTERS CONTAINER (Responsive: Hidden Dropdown Menu on Mobile, Row on Desktop) */}
+      {/* FILTERS CONTAINER */}
       <div className={`shrink-0 transition-all duration-200 ${
         isFilterMenuOpen ? "block" : "hidden sm:block"
       }`}>
@@ -145,8 +160,8 @@ function LeadsPage(){
             <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block sm:hidden">Status</span>
             <select 
               value={status} 
-              onChange={(e)=> setStatus(e.target.value as LeadStatus | "" )}
-              className="border border-border-strong rounded-xl bg-surface sm:bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer w-full"
+              onChange={(e) => setStatus(e.target.value as LeadStatus | "" )}
+              className="border border-border-strong rounded-xl bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer w-full"
             >
               <option value="">All Status</option>
               <option value="New">New</option>
@@ -160,8 +175,8 @@ function LeadsPage(){
             <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block sm:hidden">Source</span>
             <select 
               value={source} 
-              onChange={(e )=> setSource(e.target.value as LeadSource | "")}
-              className="border border-border-strong rounded-xl bg-surface sm:bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer w-full"
+              onChange={(e) => setSource(e.target.value as LeadSource | "")}
+              className="border border-border-strong rounded-xl bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer w-full"
             >
               <option value="">All Sources</option>
               <option value="Website">Website</option>
@@ -174,8 +189,8 @@ function LeadsPage(){
             <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block sm:hidden">Sort Sequence</span>
             <select 
               value={sort} 
-              onChange={(e)=> setSort(e.target.value as "latest" | "oldest" )}
-              className="border border-border-strong rounded-xl bg-surface sm:bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer w-full"
+              onChange={(e) => setSort(e.target.value as "latest" | "oldest" )}
+              className="border border-border-strong rounded-xl bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer w-full"
             >
               <option value="latest">Latest</option>
               <option value="oldest">Oldest</option>
@@ -186,46 +201,68 @@ function LeadsPage(){
 
       {/* CENTRAL DATA LIST SPACE */}
       <div className="flex-1 min-h-0 w-full overflow-hidden">
-        { loading ? (
+        {loading ? (
           <Loading />
         ) : error ? (
           <div className="border border-rose-500/20 bg-rose-500/10 text-rose-500 rounded-xl p-4 text-sm font-medium">
-            { error }
+            {error}
+          </div>
+        ) : leads.length === 0 ? (
+          <div className="p-8 text-center text-text-muted border border-dashed border-border-strong rounded-2xl bg-surface">
+            No leads found matching your search options.
           </div>
         ) : (
           <LeadsTable
             leads={leads}
-            onView={(lead, forceEdit)=>{
-              setSelectedLead(lead)
-              setStartReadOnly(!forceEdit)
-              setIsModalOpen(true)
+            onView={(lead, forceEdit) => {
+              setSelectedLead(lead);
+              setStartReadOnly(!forceEdit);
+              setIsModalOpen(true);
             }}
-            onDelete={handleDelete}
+            onDelete={openDeletePopup}
           />
         )}
       </div>
 
-      {/* PAGINATION PANEL FOOTER */}
-      { !error && leads.length > 0 && (
-        <div className="shrink-0 pt-2 border-t border-border-muted bg-canvas">
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            setPage={setPage}
-          />
+      {/* PAGINATION PANEL FOOTER - Mobile Layout Optimized */}
+      {!error && leads.length > 0 && (
+        <div className="shrink-0 pt-3 pb-2 sm:pb-0 border-t border-border-muted bg-canvas w-full flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs text-text-muted text-center sm:text-left order-2 sm:order-1">
+            Page <span className="font-semibold text-text-main">{page}</span> of <span className="font-semibold text-text-main">{totalPages}</span>
+          </div>
+          <div className="w-full sm:w-auto order-1 sm:order-2 flex justify-center">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              setPage={setPage}
+            />
+          </div>
         </div>
       )}
 
-      {isModalOpen &&(
+      {/* Main View/Edit Slide Panel */}
+      {isModalOpen && (
         <LeadModal
           lead={selectedLead}
           initialReadOnly={startReadOnly}
-          onClose={()=> setIsModalOpen(false )}
+          userRole={userRole}
+          onClose={() => { setIsModalOpen(false); setSelectedLead(null); }}
           refresh={fetchLeads}
+          onDeleteTrigger={() => setShowDeleteConfirm(true)}
+        />
+      )}
+
+      {/* Isolated Global Confirmation Popup Overlay */}
+      {showDeleteConfirm && selectedLead && (
+        <DeleteConfirm
+          name={selectedLead.name}
+          deleteLoading={deleteLoading}
+          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={handleConfirmedDelete}
         />
       )}
     </div>
-  )
+  );
 }
 
-export default LeadsPage
+export default LeadsPage;

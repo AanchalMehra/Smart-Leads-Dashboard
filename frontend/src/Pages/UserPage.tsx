@@ -24,9 +24,11 @@ function UsersPage(){
 
       setUsers(res.data.data)
       setTotalPages(res.data.pagination.pages)
-    }catch(err ){
+    }
+    catch(err){
       console.error("Failed to fetch users",err )
-    }finally{
+    }
+    finally{
       setLoading(false)
     }
   },[page])

@@ -6,13 +6,13 @@ import { AxiosError } from "axios"
 import { ArrowLeft } from "lucide-react"
 
 function LoginForm({ role, title, subtitle }: LoginFormProps){
-  const { login, logout }= useAuth()
+  const {login,logout}= useAuth()
   const navigate= useNavigate()
 
-  const [email, setEmail]= useState<string>("")
+  const [email,setEmail]= useState<string>("")
   const [password, setPassword ]= useState<string>("")
-  const [loading, setLoading]= useState<boolean>(false)
-  const [error, setError]= useState<string>("")
+  const [loading,setLoading]= useState<boolean>(false)
+  const [error,setError]= useState<string>("")
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>)=>{
     e.preventDefault()
@@ -22,8 +22,8 @@ function LoginForm({ role, title, subtitle }: LoginFormProps){
     try{
       const loggedInUser= await login(email, password, role)
 
-      // STRICT ROLE VERIFICATION GUARD
-      if(loggedInUser.role !== role){
+      //  ROLE VERIFICATION 
+      if(loggedInUser.role!== role){
         logout() 
         setError(`Access denied. You are trying to log in as an administrator using a ${loggedInUser.role} account.`)
         return
@@ -31,7 +31,7 @@ function LoginForm({ role, title, subtitle }: LoginFormProps){
       navigate("/dashboard")
       
     } 
-    catch(error: unknown){
+    catch(error:unknown){
       let message = "Login failed"
       if (error instanceof AxiosError){
         message = error.response?.data?.message || error.message || message

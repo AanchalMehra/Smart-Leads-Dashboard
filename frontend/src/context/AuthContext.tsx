@@ -1,24 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import api from "../api/axios"
+import type { Role } from "../types/auth.types";
+import type { User } from "../types/auth.types";
 
-
-
-type Role = "admin" | "sales";
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-};
 
 type AuthContextType = {
-  user: User | null;
-  token: string | null;
-  loading: boolean;
-  login: (email: string, password: string, role: Role) => Promise<User>;
-  logout: () => void;
-  refreshSession: () => Promise<void>;
+  user:User|null;
+  token:string|null;
+  loading:boolean;
+  login:(email: string, password: string, role: Role) => Promise<User>;
+  logout:()=>void;
+  refreshSession:()=> Promise<void>;
 };
 
 type Props = {
@@ -28,9 +20,7 @@ type Props = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/* 
-   PROVIDER COMPONENT
- */
+/* PROVIDER COMPONENT*/
 
 export function AuthProvider({ children }: Props){
   const [user, setUser] = useState<User | null>(null);
@@ -39,8 +29,7 @@ export function AuthProvider({ children }: Props){
   );
   const [loading, setLoading] = useState<boolean>(true);
 
-/* REFRESH SESSION (AUTO LOGIN ON REFRESH)
- */
+/* REFRESH SESSION (AUTO LOGIN ON REFRESH)*/
 
   const refreshSession = async (): Promise<void> => {
     const storedToken = localStorage.getItem("token");
@@ -54,33 +43,30 @@ export function AuthProvider({ children }: Props){
 
     try{
       const { data } = await api.get<{ user: User }>("/auth/session");
-
       setUser(data.user);
-    } catch{
+    } 
+    catch{
       localStorage.removeItem("token");
       setUser(null);
       setToken(null);
-    } finally{
+    } 
+    finally{
       setLoading(false);
     }
-  };
+  }
 
-/* RUN ON APP LOAD
-*/
+/* RUN ON APP LOAD*/
 
-  useEffect(() => {
-    refreshSession();
-  }, []);
+  useEffect(() => {refreshSession()}, []);
 
-/* LOGIN FUNCTION
- */
+/* LOGIN FUNCTION*/
 
-  const login = async (
-    email: string,
-    password: string,
-    role: Role
+  const login= async (
+    email:string,
+    password:string,
+    role:Role
   ): Promise<User> => {
-    const { data } = await api.post<{
+    const {data}= await api.post<{
       token: string;
       user: User;
     }>("/auth/login", {
@@ -90,7 +76,6 @@ export function AuthProvider({ children }: Props){
     });
 
     localStorage.setItem("token", data.token);
-
     setToken(data.token);
     setUser(data.user);
 
@@ -106,8 +91,7 @@ export function AuthProvider({ children }: Props){
     setUser(null);
   };
 
-/* CONTEXT VALUE
- */
+/* CONTEXT VALUE*/
 
   const value: AuthContextType = {
     user,
@@ -125,8 +109,7 @@ export function AuthProvider({ children }: Props){
   );
 }
 
-/* CUSTOM HOOK (SAFE ACCESS)
-*/
+/* CUSTOM HOOK (SAFE ACCESS)*/
 
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);

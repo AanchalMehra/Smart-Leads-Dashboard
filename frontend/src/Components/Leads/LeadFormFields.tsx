@@ -1,45 +1,93 @@
-import type { LeadStatus, LeadSource } from "../../types/lead.types"
+import React from "react";
+import type { LeadStatus, LeadSource } from "../../types/lead.types";
+
+export interface FormErrors {
+  name?:string;
+  email?:string;
+}
 
 interface FieldProps {
   isReadOnly: boolean;
   name: string;
-  setName: (v: string) => void;
+  setName: (v: string)=>void;
   email: string;
-  setEmail: (v: string) => void;
+  setEmail: (v: string)=>void;
   phone: string;
-  setPhone: (v: string) => void;
+  setPhone: (v: string)=>void;
   status: LeadStatus;
-  setStatus: (v: LeadStatus) => void;
+  setStatus: (v: LeadStatus)=>void;
   source: LeadSource;
-  setSource: (v: LeadSource) => void;
+  setSource: (v: LeadSource)=>void;
   notes: string;
-  setNotes: (v: string) => void;
+  setNotes: (v: string)=>void;
+  errors: FormErrors;
+  setErrors: React.Dispatch<React.SetStateAction<FormErrors>>;
 }
 
 function LeadFormFields({
-  isReadOnly, name, setName, email, setEmail, phone, setPhone,
-  status, setStatus, source, setSource, notes, setNotes
-}: FieldProps){
+  isReadOnly,name,setName,email, setEmail, phone, setPhone,
+  status,setStatus,source,setSource,notes, setNotes,
+  errors,setErrors
+}: FieldProps) {
+
+  // Clear name errors when typing
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    if (errors.name){
+      setErrors(prev => ({...prev, name: undefined}));
+    }
+  };
+
+  // Clear email errors when typing
+  const handleEmailChange=(e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: undefined }));
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Full Name */}
       <div className="space-y-1">
         <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Full Name</label>
-        <input className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75" value={name} disabled={isReadOnly} onChange={(e)=> setName(e.target.value)} />
+        <input 
+          className={`w-full border ${errors.name ? 'border-red-500' : 'border-border-strong'} bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75`} 
+          value={name} 
+          disabled={isReadOnly} 
+          onChange={handleNameChange} 
+        />
+        {errors.name &&<p className="text-xs text-red-500 mt-1">{errors.name}</p>}
       </div>
 
+      {/* Email Address */}
       <div className="space-y-1">
         <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Email Address</label>
-        <input className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75" type="email" value={email} disabled={isReadOnly} onChange={(e)=> setEmail(e.target.value)} />
+        <input 
+          className={`w-full border ${errors.email ? 'border-red-500' : 'border-border-strong'} bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75`} 
+          type="email" 
+          value={email} 
+          disabled={isReadOnly} 
+          onChange={handleEmailChange} 
+        />
+        {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
       </div>
 
+      {/* Phone Number */}
       <div className="space-y-1">
         <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Phone Number</label>
-        <input className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75" value={phone} disabled={isReadOnly} onChange={(e)=> setPhone(e.target.value)} />
+        <input 
+          className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75" 
+          value={phone} 
+          disabled={isReadOnly} 
+          onChange={(e) => setPhone(e.target.value)} 
+        />
       </div>
 
+      {/* Lead Status */}
       <div className="space-y-1">
         <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Lead Status</label>
-        <select className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75 cursor-pointer disabled:cursor-not-allowed" value={status} disabled={isReadOnly} onChange={(e)=> setStatus(e.target.value as LeadStatus)}>
+        <select className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75 cursor-pointer disabled:cursor-not-allowed" value={status} disabled={isReadOnly} onChange={(e) => setStatus(e.target.value as LeadStatus)}>
           <option value="New">New</option>
           <option value="Contacted">Contacted</option>
           <option value="Qualified">Qualified</option>
@@ -47,21 +95,23 @@ function LeadFormFields({
         </select>
       </div>
 
+      {/* Lead Source */}
       <div className="space-y-1">
         <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Lead Source</label>
-        <select className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75 cursor-pointer disabled:cursor-not-allowed" value={source} disabled={isReadOnly} onChange={(e)=> setSource(e.target.value as LeadSource)}>
+        <select className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none disabled:opacity-75 cursor-pointer disabled:cursor-not-allowed" value={source} disabled={isReadOnly} onChange={(e) => setSource(e.target.value as LeadSource)}>
           <option value="Website">Website</option>
           <option value="Instagram">Instagram</option>
           <option value="Referral">Referral</option>
         </select>
       </div>
 
+      {/* Notes */}
       <div className="space-y-1">
         <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Additional Notes</label>
-        <textarea className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none min-h-[100px] resize-none disabled:opacity-75" value={notes} disabled={isReadOnly} placeholder={isReadOnly ? "No notes available." : "Write detailed notes here..."} onChange={(e)=> setNotes(e.target.value)} />
+        <textarea className="w-full border border-border-strong bg-input-bg text-text-main p-2.5 rounded-xl text-sm focus:outline-none min-h-[100px] resize-none disabled:opacity-75" value={notes} disabled={isReadOnly} placeholder={isReadOnly ? "No notes available." : "Write detailed notes here..."} onChange={(e) => setNotes(e.target.value)} />
       </div>
     </div>
-  )
+  );
 }
 
-export default LeadFormFields
+export default LeadFormFields;

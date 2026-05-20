@@ -12,7 +12,7 @@ function ThemeToggle(): JSX.Element {
       style={{ width: "44px", height: "44px" }}
       aria-label="Toggle theme"
     >
-      {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+      {theme==="light"?<Moon size={20} /> : <Sun size={20} />}
     </button>
   );
 }

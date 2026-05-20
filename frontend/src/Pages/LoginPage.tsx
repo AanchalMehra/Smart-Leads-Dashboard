@@ -1,36 +1,31 @@
-import { Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Navigate, useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import LoginForm from "./LoginForm";
 import Loading from "../Components/Loading";
-import type{ Role } from "../types/auth.types";
-import { useAuth } from "../context/AuthContext";
+import type { Role } from "../types/auth.types";
+
+const VALID_ROLES: Role[] = ["admin", "sales"];
+
+const config = {
+  admin: { title: "Admin Portal", subtitle: "Manage system, users and leads" },
+  sales: { title: "Sales Portal", subtitle: "Manage your assigned leads" },
+};
 
 function LoginPage() {
-  const {user} = useAuth();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(()=>setLoading(false), 300); 
-    return () => clearTimeout(timer);
-  }, []);
+  const { role } = useParams<{ role: string }>();
+  const { user, loading } = useAuth();
 
   if (loading) return <Loading fullScreen />;
 
-  const typedRole: Role | undefined =user?.role === "admin"||user?.role==="sales" 
-     ? user?.role :undefined;
+  // Already logged in → go to dashboard
+  if (user) return <Navigate to="/dashboard" replace />;
 
-  if (!typedRole){return <Navigate to="/" replace />}
+  // Invalid role in URL → back to landing
+  if (!role || !VALID_ROLES.includes(role as Role)) {
+    return <Navigate to="/" replace />;
+  }
 
-  const config= {
-    admin: {
-      title:"Admin Portal",
-      subtitle:"Manage system, users and leads",
-    },
-    sales:{
-      title:"Sales Portal",
-      subtitle:"Manage your assigned leads",
-    },
-  };
+  const typedRole = role as Role;
 
   return (
     <LoginForm

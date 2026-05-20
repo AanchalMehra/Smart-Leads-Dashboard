@@ -25,7 +25,7 @@ function LoginForm({ role, title, subtitle }: LoginFormProps){
       // ROLE VERIFICATION 
       if(loggedInUser.role!== role){
         logout() 
-        setError(`Access denied. You are trying to log in as an administrator using a ${loggedInUser.role} account.`)
+        setError(`Access denied. You are trying to log in as ${role} using a ${loggedInUser.role} account.`)
         setLoading(false)
         return
       }

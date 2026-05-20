@@ -24,16 +24,12 @@ function LoginForm({ role, title, subtitle }: LoginFormProps){
 
       // STRICT ROLE VERIFICATION GUARD
       if(loggedInUser.role !== role){
-        logout() // Wipe out the token and state instantly
+        logout() 
         setError(`Access denied. You are trying to log in as an administrator using a ${loggedInUser.role} account.`)
         return
       }
-
-      if(loggedInUser.role=== "admin"){
-        navigate("/users")
-      }else{
-        navigate("/dashboard")
-      }
+      navigate("/dashboard")
+      
     } 
     catch(error: unknown){
       let message = "Login failed"

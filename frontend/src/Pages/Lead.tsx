@@ -6,6 +6,7 @@ import Pagination from "../Components/Pagination"
 import LeadModal from "../Components/Leads/LeadModal"
 import Loading from "../Components/Loading"
 import ExportCSV from "../Components/ExportCsv"
+import { Filter, ChevronDown, ChevronUp } from "lucide-react" // Added layout icons
 
 import type { Lead, LeadStatus, LeadSource, LeadsResponse } from "../types/lead.types"
 
@@ -26,6 +27,12 @@ function LeadsPage(){
   const [selectedLead,setSelectedLead ]=useState<Lead | null>(null)
   const [isModalOpen, setIsModalOpen ] = useState<boolean>(false)
   const [startReadOnly, setStartReadOnly]= useState<boolean>(false)
+
+  //  Mobile Filter Menu
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState<boolean>(false)
+
+  // Calculate active filter count (
+  const activeFilterCount = [status, source].filter(Boolean).length
 
   const fetchLeads= useCallback(async()=>{
     try{
@@ -53,7 +60,7 @@ function LeadsPage(){
     }
   },[page,limit,search,status,source,sort])
 
-  useEffect(()=>{
+  useEffect(() => {
     const timer= setTimeout(()=>{
       fetchLeads()
     },400)
@@ -61,7 +68,7 @@ function LeadsPage(){
     return()=> clearTimeout(timer)
   },[fetchLeads])
 
-  useEffect(()=>{
+  useEffect(() => {
     setPage(1)
   },[search,status,source])
 
@@ -77,59 +84,46 @@ function LeadsPage(){
   }
 
   return(
-    <div className="p-6 bg-canvas h-[calc(100vh-4rem)] text-text-main transition-colors duration-200 flex flex-col gap-4 overflow-hidden">
+    <div className="p-4 sm:p-6 bg-canvas h-[calc(100vh-4rem)] text-text-main transition-colors duration-200 flex flex-col gap-4 overflow-hidden">
       
-      {/* HEADER CONTROLS ACTIONS CLUSTER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-        <div className="flex flex-wrap items-center gap-3 flex-1">
+      {/* HEADER CONTROL ACTIONS BAR */}
+      <div className="flex flex-col gap-3 shrink-0 sm:flex-row sm:items-center sm:justify-between">
+        
+        {/* Search Field  */}
+        <div className="flex items-center gap-2 flex-1 w-full sm:max-w-xs">
           <input
-            className="border border-border-strong rounded-lg bg-surface px-3 py-2 text-sm text-text-main placeholder-text-muted focus:outline-none w-full sm:w-64"
+            className="border border-border-strong rounded-xl bg-surface px-3 py-2 text-sm text-text-main placeholder-text-muted focus:outline-none w-full"
             placeholder="Search leads..."
             value={search}
             onChange={(e )=> setSearch(e.target.value)}
           />
-
-          <select 
-            value={status} 
-            onChange={(e)=> setStatus(e.target.value as LeadStatus | "" )}
-            className="border border-border-strong rounded-lg bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer"
+          
+          {/* 📱 MOBILE ONLY: Toggle Filter Menu Button */}
+          <button
+            onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+            className={`sm:hidden flex items-center gap-1.5 border px-3 py-2 rounded-xl text-sm font-medium transition cursor-pointer ${
+              isFilterMenuOpen || activeFilterCount > 0 
+                ? "border-blue-500/30 bg-blue-500/10 text-blue-400" 
+                : "border-border-strong bg-surface text-text-muted"
+            }`}
           >
-            <option value="">All Status</option>
-            <option value="New">New</option>
-            <option value="Contacted">Contacted</option>
-            <option value="Qualified">Qualified</option>
-            <option value="Lost">Lost</option>
-          </select>
-
-          <select 
-            value={source} 
-            onChange={(e )=> setSource(e.target.value as LeadSource | "")}
-            className="border border-border-strong rounded-lg bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer"
-          >
-            <option value="">All Sources</option>
-            <option value="Website">Website</option>
-            <option value="Instagram">Instagram</option>
-            <option value="Referral">Referral</option>
-          </select>
-
-          <select 
-            value={sort} 
-            onChange={(e)=> setSort(e.target.value as "latest" | "oldest" )}
-            className="border border-border-strong rounded-lg bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer"
-          >
-            <option value="latest">Latest</option>
-            <option value="oldest">Oldest</option>
-          </select>
+            <Filter size={16} />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-0.5">
+                {activeFilterCount}
+              </span>
+            )}
+            {isFilterMenuOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
         </div>
 
-        {/* COMBINED ACTION CONTROL BUTTONS CONTAINER */}
-        <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
-          
-          {/* Beautiful and simple call to the separate CSV exporter */}
+        {/* TOP BUTTON ACTIONS ROW (CSV + ADD LEAD) */}
+        <div className="flex items-center gap-2 shrink-0 justify-end sm:w-auto">
           <ExportCSV disabled={loading} />
 
           <button
-            className="bg-blue-600 text-white font-medium px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors cursor-pointer whitespace-nowrap"
+            className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl text-sm hover:bg-blue-700 transition active:scale-[0.98] cursor-pointer whitespace-nowrap flex-1 sm:flex-none justify-center text-center"
             onClick={()=>{
               setSelectedLead(null)
               setStartReadOnly(false)
@@ -141,17 +135,62 @@ function LeadsPage(){
         </div>
       </div>
 
-      {/* MIDDLE CONTAINER PANEL */}
+      {/* 📊 FILTERS CONTAINER (Responsive: Hidden Dropdown Menu on Mobile, Row on Desktop) */}
+      <div className={`shrink-0 transition-all duration-200 ${
+        isFilterMenuOpen ? "block" : "hidden sm:block"
+      }`}>
+        <div className="bg-surface sm:bg-transparent border border-border-muted sm:border-none p-4 sm:p-0 rounded-xl grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+          
+          <div className="flex flex-col gap-1 w-full sm:w-auto">
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block sm:hidden">Status</span>
+            <select 
+              value={status} 
+              onChange={(e)=> setStatus(e.target.value as LeadStatus | "" )}
+              className="border border-border-strong rounded-xl bg-surface sm:bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer w-full"
+            >
+              <option value="">All Status</option>
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Qualified">Qualified</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1 w-full sm:w-auto">
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block sm:hidden">Source</span>
+            <select 
+              value={source} 
+              onChange={(e )=> setSource(e.target.value as LeadSource | "")}
+              className="border border-border-strong rounded-xl bg-surface sm:bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer w-full"
+            >
+              <option value="">All Sources</option>
+              <option value="Website">Website</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Referral">Referral</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1 w-full col-span-2 sm:w-auto">
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block sm:hidden">Sort Sequence</span>
+            <select 
+              value={sort} 
+              onChange={(e)=> setSort(e.target.value as "latest" | "oldest" )}
+              className="border border-border-strong rounded-xl bg-surface sm:bg-surface px-3 py-2 text-sm text-text-main focus:outline-none cursor-pointer w-full"
+            >
+              <option value="latest">Latest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* CENTRAL DATA LIST SPACE */}
       <div className="flex-1 min-h-0 w-full overflow-hidden">
         { loading ? (
           <Loading />
         ) : error ? (
-          <div className="border border-rose-500/20 bg-rose-500/10 text-rose-500 rounded-lg p-4 text-sm font-medium">
+          <div className="border border-rose-500/20 bg-rose-500/10 text-rose-500 rounded-xl p-4 text-sm font-medium">
             { error }
-          </div>
-        ) : leads.length === 0 ? (
-          <div className="border border-border-strong bg-surface rounded-xl p-12 text-center text-text-muted text-sm font-medium">
-            No leads available in this view.
           </div>
         ) : (
           <LeadsTable
@@ -166,7 +205,7 @@ function LeadsPage(){
         )}
       </div>
 
-      {/* PAGINATION PANEL CONTROLS */}
+      {/* PAGINATION PANEL FOOTER */}
       { !error && leads.length > 0 && (
         <div className="shrink-0 pt-2 border-t border-border-muted bg-canvas">
           <Pagination

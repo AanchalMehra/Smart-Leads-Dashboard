@@ -1,0 +1,25 @@
+[33m2060ce7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m pass VITE_BASE_URL as build arg in Dockerfile
+[33meb94253[m fix: update CORS to allow localhost and production frontend
+[33mb65f8c4[m add Docker setup
+[33md60fe9d[m update Leads UI and add CSV support
+[33me37e7a3[m Enhanced lead tracking and dashboard analytics
+[33m08e0f65[m Added login page interface
+[33m28ffd51[m Implemented user management page and table
+[33m7ec2c42[m Created reusable loading and pagination components
+[33m93d3168[m Added dark theme support and theme toggle
+[33m1f779c3[m Configured frontend assets and API setup
+[33mdcb9e49[m Added shared TypeScript types and interfaces
+[33m46ff2d1[m Implemented lead management and tracking features
+[33m5738f54[m Built dashboard analytics and reporting interface
+[33m8437730[m Implemented authentication flow and landing page
+[33ma21a34b[m Added frontend routing and application layout
+[33medc7d3d[m Set up frontend project structure
+[33mf8b633a[m add auth session and dashboard endpoints
+[33m18a4f2f[m  add seed data for development
+[33m553923f[m add user routes with admin protection
+[33m2dbba87[m add getAllUsers controller for admin access
+[33m8b9fc80[m created CSV export controller
+[33m838ba7f[m  add Lead model
+[33mdbf249a[m add jwt authentication and role based middleware
+[33m98b6a0b[m implement authentication system with jwt and bcrypt
+[33m4cd9867[m initial backend setup with typescript and express

@@ -22,13 +22,15 @@ function LoginForm({ role, title, subtitle }: LoginFormProps){
     try{
       const loggedInUser= await login(email, password, role)
 
-      //  ROLE VERIFICATION 
+      // ROLE VERIFICATION 
       if(loggedInUser.role!== role){
         logout() 
         setError(`Access denied. You are trying to log in as an administrator using a ${loggedInUser.role} account.`)
+        setLoading(false)
         return
       }
-      navigate("/dashboard")
+
+      navigate("/dashboard", { replace: true })
       
     } 
     catch(error:unknown){

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
-import Loading from "../Components/Loading";
 import { AxiosError } from "axios";
 import { ArrowLeft } from "lucide-react";
 import type { SignupFormData } from "../types/auth.types";
@@ -40,7 +39,7 @@ function SignupPage() {
 
     try {
       await api.post<SignupResponse>("/auth/signup", form);
-      navigate("/login/sales");
+      navigate("/login/sales", { replace: true });
     } catch (err: unknown) {
       let message="Signup failed";
 
@@ -57,10 +56,6 @@ function SignupPage() {
       setLoading(false);
     }
   };
-
-  if (loading) {
-    return <Loading fullScreen />;
-  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 px-4 sm:px-6 lg:px-8">

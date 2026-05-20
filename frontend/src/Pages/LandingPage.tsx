@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import Loading from "../Components/Loading"
+import { useEffect } from "react"
 
 function LandingPage() {
   const {user,loading }= useAuth()
@@ -8,10 +9,11 @@ function LandingPage() {
 
   if (loading)return<Loading fullScreen />
 
-  if (user) {
-    navigate( "/dashboard", {replace: true })
-    return null
-  }
+   useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true })
+    }
+  }, [user, navigate])
 
   return (
     <div className="min-h-screen bg-canvas text-text-main flex flex-col items-center justify-center px-4 transition-colors duration-200">
@@ -51,5 +53,6 @@ function LandingPage() {
     </div>
   )
 }
+
 
 export default LandingPage

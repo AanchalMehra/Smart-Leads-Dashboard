@@ -7,13 +7,14 @@ function LandingPage() {
   const {user,loading }= useAuth()
   const navigate=useNavigate()
 
-  if (loading)return<Loading fullScreen />
+  
 
    useEffect(() => {
     if (user) {
       navigate("/dashboard", { replace: true })
     }
   }, [user, navigate])
+  if (loading)return<Loading fullScreen />
 
   return (
     <div className="min-h-screen bg-canvas text-text-main flex flex-col items-center justify-center px-4 transition-colors duration-200">
